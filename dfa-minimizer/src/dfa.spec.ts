@@ -8,6 +8,8 @@ const machineTests: {
         accepted: string[];
         rejected: string[];
         initialEquivalenceClass: string[][];
+        minimizedEquivalenceClass: string[][],
+        initialStateBehavior: string[],
     };
 } = {
     startsWith0: {
@@ -32,6 +34,8 @@ const machineTests: {
         accepted: ['0', '01', '00000', '0111111'],
         rejected: ['', '10', '10001010', '111111', '101111'],
         initialEquivalenceClass: [['A'], ['S', 'B']],
+        minimizedEquivalenceClass: [['S'], ['A'], ['B']],
+        initialStateBehavior: ['01', '00', '11'],
     },
     divisibleBy3: {
         description: {
@@ -55,6 +59,45 @@ const machineTests: {
         accepted: ['', '0', '11', '00000', '110000', '101111111101'],
         rejected: ['10', '1010', '100000', '1011111'],
         initialEquivalenceClass: [['r0'], ['r1', 'r2']],
+        minimizedEquivalenceClass: [['r0'], ['r1'], ['r2']],
+        initialStateBehavior: ['01', '10', '11'],
+    },
+    startsWith010Unminimized: {
+        description: {
+            transitions: {
+                A: {
+                    0: 'B',
+                    1: 'C',
+                },
+                B: {
+                    0: 'C',
+                    1: 'D',
+                },
+                C: {
+                    0: 'C',
+                    1: 'C',
+                },
+                D: {
+                    0: 'F',
+                    1: 'E',
+                },
+                E: {
+                    0: 'E',
+                    1: 'E',
+                },
+                F: {
+                    0: 'F',
+                    1: 'F',
+                },
+            },
+            start: 'A',
+            acceptStates: ['F'],
+        },
+        accepted: ['010', '01010010', '01000100', '01011111'],
+        rejected: ['', '1', '011', '1111111'],
+        initialEquivalenceClass: [['F'], ['A', 'B', 'C', 'D', 'E']],
+        minimizedEquivalenceClass: [['A'], ['B'], ['C', 'E'], ['D'], ['F']],
+        initialStateBehavior: ['11', '11', '11', '01', '11', '00'],
     },
 };
 
@@ -90,12 +133,32 @@ for (const [name, testDescription] of Object.entries(machineTests)) {
             t.assert(!dfa.accepts(s));
         }
     });
-    test(`${name}/initEquivalenceClass`, (t) => {
+    test(`${name}/initialEquivClass`, (t) => {
         const dfa = new DeterministicFiniteStateMachine(
             testDescription.description
         );
         const { initialEquivalenceClass } = testDescription;
-        console.log(dfa.initEquivClass());
-        t.assert(initialEquivalenceClass == dfa.initEquivClass());
+        t.assert(JSON.stringify(initialEquivalenceClass) === JSON.stringify(dfa.initialEquivalenceClass()));
+    });
+    test(`${name}/findStateBehavior`, (t) => {
+        const dfa = new DeterministicFiniteStateMachine(
+            testDescription.description
+        );
+        const { initialEquivalenceClass, initialStateBehavior } = testDescription;
+        const { transitions, } = testDescription.description;
+        let count = 0;
+        for (const [, stateTransitions] of Object.entries(transitions)) {
+            t.assert(initialStateBehavior[count] === dfa.findStateBehavior(initialEquivalenceClass, stateTransitions));
+            count++;
+        }
+    });
+    test(`${name}/minimize`, (t) => {
+        const dfa = new DeterministicFiniteStateMachine(
+            testDescription.description
+        );
+        const { minimizedEquivalenceClass } = testDescription;
+        console.log(minimizedEquivalenceClass);
+        console.log(dfa.minimize());
+        t.assert(JSON.stringify(minimizedEquivalenceClass) === JSON.stringify(dfa.minimize()));
     });
 }

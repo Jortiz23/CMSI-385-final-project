@@ -23,6 +23,7 @@ export default class DeterministicFiniteStateMachine {
         const {
             description: { transitions },
         } = this;
+        
         return transitions[state][symbol];
     }
 
@@ -40,23 +41,36 @@ export default class DeterministicFiniteStateMachine {
         return acceptStates.includes(state);
     }
 
-    minimize(): DeterministicFiniteStateMachine {
+    minimize(): string[][] {
         const {
             description: { transitions },
         } = this;
 
-        const equivalenceClass = this.initEquivClass();
-        equivalenceClass;
+        let equivalenceClass = this.initialEquivalenceClass();
+        let previousEquivalenceClass: State[][] = [];
 
-        for (const [state, stateTransitions] of Object.entries(transitions)) {
-            state;
-            stateTransitions;
+        while(JSON.stringify(previousEquivalenceClass) != JSON.stringify(equivalenceClass)){
+            previousEquivalenceClass = equivalenceClass;
+            const newEquivalenceClass: State[][] = [];
+            const behaviorOfNewClass: string[] = [];
+            for (const [state, stateTransitions] of Object.entries(transitions)) {
+                const stateBehavior: string = this.findStateBehavior(previousEquivalenceClass, stateTransitions);
+                if(behaviorOfNewClass.includes(stateBehavior)){
+                    newEquivalenceClass[behaviorOfNewClass.indexOf(stateBehavior)].push(state);
+                }
+                else{
+                    behaviorOfNewClass.push(stateBehavior);
+                    
+                    newEquivalenceClass.push([state]);
+                }
+            }         
+            equivalenceClass = newEquivalenceClass;
         }
 
-        return this;
+        return equivalenceClass;
     }
 
-    initEquivClass(): State[][] {
+    initialEquivalenceClass(): State[][] {
         const {
             description: { transitions, acceptStates },
         } = this;
@@ -72,5 +86,22 @@ export default class DeterministicFiniteStateMachine {
         }
 
         return initialEquivalenceClass;
+    }
+
+    findStateBehavior(equivalenceClass: State[][], transitions: {
+            0: State;
+            1: State;
+    }): string {
+        let behavior = '';
+        for (const [ , nextState] of Object.entries(transitions)) {
+            for(let i = 0; i < equivalenceClass.length; i++){
+                for(let j = 0; j < equivalenceClass[i].length; j++){
+                    if(equivalenceClass[i][j] === nextState){
+                        behavior += i;
+                    }
+                }
+            }
+        }
+        return behavior;
     }
 }
