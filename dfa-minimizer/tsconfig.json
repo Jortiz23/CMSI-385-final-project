@@ -41,7 +41,7 @@
     "types": ["node"],
     "typeRoots": ["node_modules/@types", "src/types"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "../nfa-simulator/src/nfa.ts", "../nfa-simulator/src/nfa.spec.ts"],
   "exclude": ["node_modules/**"],
   "compileOnSave": false
 }

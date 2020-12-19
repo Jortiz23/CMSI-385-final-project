@@ -8,8 +8,9 @@ const machineTests: {
         accepted: string[];
         rejected: string[];
         initialEquivalenceClass: string[][];
-        minimizedEquivalenceClass: string[][],
-        initialStateBehavior: string[],
+        minimizedEquivalenceClass: string[][];
+        initialStateBehavior: string[];
+        minimizedDescription: DFADescription;
     };
 } = {
     startsWith0: {
@@ -36,6 +37,24 @@ const machineTests: {
         initialEquivalenceClass: [['A'], ['S', 'B']],
         minimizedEquivalenceClass: [['S'], ['A'], ['B']],
         initialStateBehavior: ['01', '00', '11'],
+        minimizedDescription: {
+            transitions: {
+                S: {
+                    0: 'A',
+                    1: 'B',
+                },
+                A: {
+                    0: 'A',
+                    1: 'A',
+                },
+                B: {
+                    0: 'B',
+                    1: 'B',
+                },
+            },
+            start: 'S',
+            acceptStates: ['A'],
+        },
     },
     divisibleBy3: {
         description: {
@@ -61,6 +80,24 @@ const machineTests: {
         initialEquivalenceClass: [['r0'], ['r1', 'r2']],
         minimizedEquivalenceClass: [['r0'], ['r1'], ['r2']],
         initialStateBehavior: ['01', '10', '11'],
+        minimizedDescription: {
+            transitions: {
+                r0: {
+                    0: 'r0',
+                    1: 'r1',
+                },
+                r1: {
+                    0: 'r2',
+                    1: 'r0',
+                },
+                r2: {
+                    0: 'r1',
+                    1: 'r2',
+                },
+            },
+            start: 'r0',
+            acceptStates: ['r0'],
+        },
     },
     startsWith010Unminimized: {
         description: {
@@ -98,6 +135,138 @@ const machineTests: {
         initialEquivalenceClass: [['F'], ['A', 'B', 'C', 'D', 'E']],
         minimizedEquivalenceClass: [['A'], ['B'], ['C', 'E'], ['D'], ['F']],
         initialStateBehavior: ['11', '11', '11', '01', '11', '00'],
+        minimizedDescription: {
+            transitions: {
+                A: {
+                    0: 'B',
+                    1: 'CE',
+                },
+                B: {
+                    0: 'CE',
+                    1: 'D',
+                },
+                CE: {
+                    0: 'CE',
+                    1: 'CE',
+                },
+                D: {
+                    0: 'F',
+                    1: 'CE',
+                },
+                F: {
+                    0: 'F',
+                    1: 'F',
+                },
+            },
+            start: 'A',
+            acceptStates: ['F'],
+        },
+    },
+    startsWith0OnlyUnminimized: { // Quiz 2 question 1
+        description: {
+            transitions: {
+                A: {
+                    0: 'E',
+                    1: 'M',
+                },
+                E: {
+                    0: 'N',
+                    1: 'G',
+                },
+                G: {
+                    0: 'K',
+                    1: 'G',
+                },
+                K: {
+                    0: 'M',
+                    1: 'N',
+                },
+                N: {
+                    0: 'K',
+                    1: 'M',
+                },
+                M: {
+                    0: 'M',
+                    1: 'K',
+                },
+            },
+            start: 'A',
+            acceptStates: ['E', 'G'],
+        },
+        accepted: ['0', '01', '01111', '0111111'],
+        rejected: ['', '1', '010', '01111110', '101'],
+        initialEquivalenceClass: [['E', 'G'], ['A', 'K', 'N', 'M']],
+        minimizedEquivalenceClass: [['A'], ['E', 'G'], ['K', 'N', 'M']],
+        initialStateBehavior: ['01', '10', '10', '11', '11', '11'],
+        minimizedDescription: {
+            transitions: {
+                A: {
+                    0: 'EG',
+                    1: 'KNM',
+                },
+                EG: {
+                    0: 'KNM',
+                    1: 'EG',
+                },
+                KNM: {
+                    0: 'KNM',
+                    1: 'KNM',
+                },
+            },
+            start: 'A',
+            acceptStates: ['EG'],
+        },
+    },
+    noConsecutive1sUnminimized: { // Quiz 2 question 2
+        description: {
+            transitions: {
+                A: {
+                    0: 'E',
+                    1: 'G',
+                },
+                E: {
+                    0: 'A',
+                    1: 'G',
+                },
+                G: {
+                    0: 'A',
+                    1: 'K',
+                },
+                K: {
+                    0: 'M',
+                    1: 'M',
+                },
+                M: {
+                    0: 'M',
+                    1: 'K',
+                },
+            },
+            start: 'A',
+            acceptStates: ['A', 'E', 'G'],
+        },
+        accepted: ['', '0', '1', '0100010', '101010101'],
+        rejected: ['11', '0100110010', '011111', '0101101'],
+        initialEquivalenceClass: [['A', 'E', 'G'], ['K', 'M']],
+        minimizedEquivalenceClass: [['A', 'E'], ['G'], ['K', 'M']],
+        initialStateBehavior: ['00', '00', '01', '11', '11'],
+        minimizedDescription: {
+            transitions: {
+                AE: {
+                    0: 'AE',
+                    1: 'G',
+                },
+                G: {
+                    0: 'AE',
+                    1: 'KM',
+                },
+                KM: {
+                    0: 'KM',
+                    1: 'KM',
+                },
+            },
+            start: 'AE',
+            acceptStates: ['AE', 'G'],
+        },
     },
 };
 
@@ -156,9 +325,9 @@ for (const [name, testDescription] of Object.entries(machineTests)) {
         const dfa = new DeterministicFiniteStateMachine(
             testDescription.description
         );
-        const { minimizedEquivalenceClass } = testDescription;
-        console.log(minimizedEquivalenceClass);
-        console.log(dfa.minimize());
-        t.assert(JSON.stringify(minimizedEquivalenceClass) === JSON.stringify(dfa.minimize()));
+        const minimizeddfa = new DeterministicFiniteStateMachine(
+            testDescription.minimizedDescription
+        )
+        t.assert(JSON.stringify(minimizeddfa) === JSON.stringify(dfa.minimize()));
     });
 }

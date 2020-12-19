@@ -22,7 +22,9 @@
         "transpiled",
         "typedoc",
         "untracked",
-        "CMSI"
+        "CMSI",
+        "unminimized",
+        "minimizeddfa",
     ],
     "flagWords": [],
     "ignorePaths": [
